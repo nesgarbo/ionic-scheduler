@@ -286,6 +286,24 @@ bun run build   # ng-packagr → dist/
 bun run test    # 127 tests, vitest + jsdom
 ```
 
+## Releasing
+
+The package that goes to npm is the **built** one, `dist/`, not the repository root: the root
+`package.json` is the source manifest and ng-packagr rewrites it — resolving the entry points,
+dropping the scripts and the devDependencies — into `dist/package.json`, alongside the FESM bundle,
+the types and `styles/scheduler.css`.
+
+```bash
+bun run test
+bun run build
+npm pack --dry-run ./dist   # what will actually be uploaded
+npm login                   # once
+bun run release             # build + npm publish ./dist
+```
+
+Bump `version` in the root `package.json`, tag it (`git tag -a v1.0.1 -m v1.0.1 && git push --tags`)
+and publish from a clean tree, so the tag and the version on npm say the same thing.
+
 ## Credits and licence
 
 MIT. This is a port of the [Optimus UI](https://www.openng.org/) Scheduler (MIT, © OpenNG, and
