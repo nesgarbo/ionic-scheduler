@@ -34,7 +34,8 @@
         "test": "ng test",
         "format": "prettier --write \"src/**/*.ts\" \"styles/**/*.css\"",
         "format:check": "prettier --check \"src/**/*.ts\" \"styles/**/*.css\"",
-        "release": "bun run build && npm publish ./dist"
+        "release": "bun run build && npm publish ./dist",
+        "prepublishOnly": "node -e \"console.error('\\n  This is the SOURCE manifest. What gets published is the build: npm run release (or npm publish ./dist).\\n'); process.exit(1)\""
     },
     "peerDependencies": {
         "@angular/common": ">=20.0.0",
