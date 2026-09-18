@@ -1,0 +1,64 @@
+{
+    "name": "ionic-scheduler",
+    "version": "1.0.0",
+    "description": "A compound scheduling surface for Ionic Angular: day, week, month, year, agenda, timeline and resource-timeline views, built out of Ionic components and themed with Ionic's own design tokens.",
+    "keywords": [
+        "ionic",
+        "angular",
+        "scheduler",
+        "calendar",
+        "agenda",
+        "timeline",
+        "resource-scheduler",
+        "capacitor"
+    ],
+    "license": "MIT",
+    "author": "Nestor Garcia Bou (https://github.com/nesgarbo)",
+    "homepage": "https://github.com/nesgarbo/ionic-scheduler#readme",
+    "bugs": {
+        "url": "https://github.com/nesgarbo/ionic-scheduler/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/nesgarbo/ionic-scheduler.git"
+    },
+    "sideEffects": false,
+    "exports": {
+        "./styles/*": {
+            "default": "./styles/*"
+        }
+    },
+    "packageManager": "bun@1.4.2",
+    "scripts": {
+        "build": "ng build",
+        "test": "ng test",
+        "format": "prettier --write \"src/**/*.ts\" \"styles/**/*.css\"",
+        "format:check": "prettier --check \"src/**/*.ts\" \"styles/**/*.css\"",
+        "release": "bun run build && npm publish ./dist"
+    },
+    "peerDependencies": {
+        "@angular/common": ">=20.0.0",
+        "@angular/core": ">=20.0.0",
+        "@ionic/angular": ">=8.0.0",
+        "ionicons": ">=7.0.0"
+    },
+    "dependencies": {
+        "tslib": "^2.8.1"
+    },
+    "devDependencies": {
+        "@angular/build": "^22.1.8",
+        "@angular/cli": "^22.1.8",
+        "@angular/common": "22.1.7",
+        "@angular/compiler": "22.1.7",
+        "@angular/compiler-cli": "22.1.7",
+        "@angular/core": "22.1.7",
+        "@angular/platform-browser": "22.1.7",
+        "@ionic/angular": "9.0.4",
+        "ionicons": "^8.1.0",
+        "jsdom": "^30.1.0",
+        "ng-packagr": "^22.1.1",
+        "prettier": "^3.9.7",
+        "typescript": "6.0.3",
+        "vitest": "^5.0.1"
+    }
+}

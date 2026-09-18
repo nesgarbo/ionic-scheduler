@@ -1,0 +1,1952 @@
+/*!
+ * ionic-scheduler — stylesheet
+ *
+ * Port of the Optimus UI Scheduler stylesheet (MIT) onto Ionic's design tokens.
+ *
+ * ── How the theming works ────────────────────────────────────────────────────────────────────────
+ *
+ * Every measurement and colour the grid draws with comes from an internal `--_isch-*` variable, and
+ * each of those reads a PUBLIC `--ionic-scheduler-*` override first and falls back to a value
+ * derived from Ionic's own tokens. So:
+ *
+ *   • Nothing is hard-coded against a palette. The surfaces come from `--ion-background-color`, the
+ *     text from `--ion-text-color`, the accent from `--ion-color-primary` and the "now" line from
+ *     `--ion-color-danger` — which is what makes the component follow Ionic's dark palette, a
+ *     recoloured brand and the iOS 26 / MD3 skins without a second stylesheet.
+ *
+ *   • The shades in between come from `--ion-background-color-step-*`, which Ionic only defines in
+ *     its dark palette; in light mode they fall back to a `color-mix` of text over background, which
+ *     is the same relationship those steps encode. Either way one definition covers both modes.
+ *
+ *   • An application overrides `--ionic-scheduler-…` anywhere up the tree — `:root`, a page, the
+ *     component itself — because the internal variable READS the public one rather than being it.
+ *     Setting `--ionic-scheduler-today-background` on `ion-content` works.
+ *
+ * The chrome (header, buttons, segment, chips, spinner, popovers) is made of real Ionic components
+ * and is NOT themed here: it is styled by Ionic and by whichever skin the application loads.
+ */
+
+.ionic-scheduler {
+    /* ── Ionic surfaces, resolved once ───────────────────────────────────────────────────────── */
+    --_isch-background: var(--ionic-scheduler-background, var(--ion-background-color, #fff));
+    --_isch-color: var(--ionic-scheduler-color, var(--ion-text-color, #000));
+    --_isch-accent-color: var(--ionic-scheduler-accent-color, var(--ion-color-primary, #0054e9));
+
+    /* Ionic's own steps when the palette defines them (it does in dark), a mix of the text colour
+       over the background when it does not (light). Both express the same thing: one notch away
+       from the surface, in whichever direction the scheme runs. */
+    --_isch-step-50: var(--ion-background-color-step-50, color-mix(in srgb, var(--_isch-color) 5%, var(--_isch-background)));
+    --_isch-step-100: var(--ion-background-color-step-100, color-mix(in srgb, var(--_isch-color) 10%, var(--_isch-background)));
+    --_isch-step-150: var(--ion-background-color-step-150, color-mix(in srgb, var(--_isch-color) 15%, var(--_isch-background)));
+    --_isch-muted: var(--ionic-scheduler-muted-color, var(--ion-color-medium, color-mix(in srgb, var(--_isch-color) 55%, var(--_isch-background))));
+
+    /* ── Frame ───────────────────────────────────────────────────────────────────────────────── */
+    --_isch-border-color: var(--ionic-scheduler-border-color, var(--ion-border-color, var(--ion-item-border-color, color-mix(in srgb, var(--_isch-color) 13%, transparent))));
+    --_isch-border-radius: var(--ionic-scheduler-border-radius, 8px);
+    --_isch-focus-ring-color: var(--ionic-scheduler-focus-ring-color, var(--_isch-accent-color));
+
+    /* ── Header ──────────────────────────────────────────────────────────────────────────────── */
+    /* Zero padding: the header IS an `ion-toolbar` now, and the toolbar's own padding is the one
+       the skins expect to control. */
+    --_isch-header-padding: var(--ionic-scheduler-header-padding, 0);
+    --_isch-header-gap: var(--ionic-scheduler-header-gap, 0.5rem);
+    --_isch-header-background: var(--ionic-scheduler-header-background, var(--ion-toolbar-background, var(--_isch-background)));
+    --_isch-title-font-size: var(--ionic-scheduler-title-font-size, 1.0625rem);
+    --_isch-title-font-weight: var(--ionic-scheduler-title-font-weight, 600);
+    --_isch-title-color: var(--ionic-scheduler-title-color, var(--ion-toolbar-color, var(--_isch-color)));
+    --_isch-legend-padding: var(--ionic-scheduler-legend-padding, 0.5rem 1rem);
+    --_isch-category-legend-item-background: var(--ionic-scheduler-category-legend-item-background, var(--_isch-background));
+    --_isch-category-legend-count-color: var(--ionic-scheduler-category-legend-count-color, var(--_isch-muted));
+
+    /* ── Time grid ───────────────────────────────────────────────────────────────────────────── */
+    --_isch-gutter-width: var(--ionic-scheduler-gutter-width, 4rem);
+    --_isch-gutter-font-size: var(--ionic-scheduler-gutter-font-size, 0.75rem);
+    --_isch-gutter-color: var(--ionic-scheduler-gutter-color, var(--_isch-muted));
+    --_isch-slot-height: var(--ionic-scheduler-slot-height, 1.75rem);
+    --_isch-all-day-row-height: var(--ionic-scheduler-all-day-row-height, 1.375rem);
+    --_isch-day-min-width: var(--ionic-scheduler-day-min-width, 6rem);
+    --_isch-day-header-padding: var(--ionic-scheduler-day-header-padding, 0.5rem);
+    --_isch-day-hover-background: var(--ionic-scheduler-day-hover-background, var(--_isch-step-50));
+    --_isch-weekday-background: var(--ionic-scheduler-weekday-background, var(--_isch-step-50));
+    /* The weekend is NOT tinted by default: with Saturday and Sunday shaded, the grey of "today"
+       and the grey of out-of-hours stop meaning anything. The token is here for anyone who wants
+       it back. */
+    --_isch-weekend-background: var(--ionic-scheduler-weekend-background, transparent);
+    --_isch-business-background: var(--ionic-scheduler-business-background, var(--_isch-background));
+    --_isch-non-business-background: var(--ionic-scheduler-non-business-background, var(--_isch-step-50));
+    /* "You cannot" has to read differently from "we usually do not": blocked is hatched, out-of-hours
+       is shaded. */
+    --_isch-blocked-background: var(--ionic-scheduler-blocked-background, repeating-linear-gradient(135deg, color-mix(in srgb, var(--_isch-color) 12%, transparent) 0 4px, transparent 4px 8px));
+    --_isch-slot-available-background: var(--ionic-scheduler-slot-available-background, color-mix(in srgb, var(--_isch-accent-color) 6%, transparent));
+    /* `--ion-color-danger` and not a literal red: the line marking "now" is an alert, and an
+       application that recoloured its danger colour meant that one too. */
+    --_isch-now-indicator-color: var(--ionic-scheduler-now-indicator-color, var(--ion-color-danger, #eb445a));
+
+    /* ── Today and selection ─────────────────────────────────────────────────────────────────── */
+    --_isch-today-background: var(--ionic-scheduler-today-background, color-mix(in srgb, var(--_isch-accent-color) 10%, transparent));
+    --_isch-today-color: var(--ionic-scheduler-today-color, var(--_isch-accent-color));
+    /* The circle round the number carries a little more body than the column's tint: it is 24px
+       across and not a whole column. */
+    --_isch-today-badge-background: var(--ionic-scheduler-today-badge-background, color-mix(in srgb, var(--_isch-accent-color) 16%, transparent));
+    --_isch-today-badge-color: var(--ionic-scheduler-today-badge-color, var(--_isch-accent-color));
+    --_isch-selected-background: var(--ionic-scheduler-selected-background, color-mix(in srgb, var(--_isch-accent-color) 22%, var(--_isch-background)));
+    --_isch-selected-color: var(--ionic-scheduler-selected-color, var(--_isch-color));
+
+    /* ── Events ──────────────────────────────────────────────────────────────────────────────── */
+    --_isch-event-color: var(--ionic-scheduler-event-color, var(--_isch-color));
+    --_isch-event-border-accent: var(--ionic-scheduler-event-border-accent, var(--_isch-accent-color));
+    --_isch-event-border-radius: var(--ionic-scheduler-event-border-radius, 4px);
+    --_isch-event-font-size: var(--ionic-scheduler-event-font-size, 0.75rem);
+    --_isch-event-time-font-size: var(--ionic-scheduler-event-time-font-size, 0.6875rem);
+    --_isch-event-padding-x: var(--ionic-scheduler-event-padding-x, 0.375rem);
+    --_isch-event-hover-background: var(--ionic-scheduler-event-hover-background, var(--_isch-step-100));
+    /* 18% of the event's own colour over the background: enough to tell categories apart at a
+       glance, low enough that the text keeps its contrast in light and in dark. */
+    --_isch-event-fill-opacity: var(--ionic-scheduler-event-fill-opacity, 18%);
+
+    /* ── Month ───────────────────────────────────────────────────────────────────────────────── */
+    --_isch-month-day-min-width: var(--ionic-scheduler-month-day-min-width, 6rem);
+    --_isch-month-cell-min-height: var(--ionic-scheduler-month-cell-min-height, 5.5rem);
+    --_isch-month-cell-padding: var(--ionic-scheduler-month-cell-padding, 0.25rem);
+    --_isch-month-number-font-size: var(--ionic-scheduler-month-number-font-size, 0.8125rem);
+    --_isch-month-number-height: var(--ionic-scheduler-month-number-height, 1.5rem);
+    --_isch-other-month-background: var(--ionic-scheduler-other-month-background, var(--_isch-step-50));
+    --_isch-other-month-color: var(--ionic-scheduler-other-month-color, var(--_isch-muted));
+    --_isch-more-link-color: var(--ionic-scheduler-more-link-color, var(--_isch-accent-color));
+
+    /* ── Year (mini months) ──────────────────────────────────────────────────────────────────── */
+    /* Geometry in px and not in rem: these are layout decisions and have to come out the same even
+       where the host application runs on a different typographic base. Font sizes stay in rem. */
+    --_isch-mini-month-gap: var(--ionic-scheduler-mini-month-gap, 16px);
+    --_isch-mini-month-padding: var(--ionic-scheduler-mini-month-padding, 8px);
+    --_isch-mini-month-grid-padding: var(--ionic-scheduler-mini-month-grid-padding, 6px);
+    --_isch-mini-month-min-width: var(--ionic-scheduler-mini-month-min-width, 180px);
+    --_isch-mini-month-day-size: var(--ionic-scheduler-mini-month-day-size, 17px);
+    --_isch-mini-month-font-size: var(--ionic-scheduler-mini-month-font-size, 1rem);
+    --_isch-mini-month-border-radius: var(--ionic-scheduler-mini-month-border-radius, 8px);
+    --_isch-mini-month-weekend-color: var(--ionic-scheduler-mini-month-weekend-color, var(--_isch-accent-color));
+
+    /* ── Timeline and resources ──────────────────────────────────────────────────────────────── */
+    --_isch-timeline-slot-width: var(--ionic-scheduler-timeline-slot-width, 80px);
+    --_isch-timeline-row-height: var(--ionic-scheduler-timeline-row-height, 48px);
+    --_isch-timeline-header-height: var(--ionic-scheduler-timeline-header-height, 36px);
+    --_isch-timeline-event-height: var(--ionic-scheduler-timeline-event-height, 36px);
+    /* Square: on a horizontal axis, rounded corners on adjacent bars leave a notch between them. */
+    --_isch-timeline-event-border-radius: var(--ionic-scheduler-timeline-event-border-radius, 0);
+    --_isch-resource-area-width: var(--ionic-scheduler-resource-area-width, 240px);
+    --_isch-resource-area-background: var(--ionic-scheduler-resource-area-background, var(--_isch-background));
+    --_isch-resource-area-header-padding: var(--ionic-scheduler-resource-area-header-padding, 12px 16px);
+    --_isch-resource-area-row-padding: var(--ionic-scheduler-resource-area-row-padding, 8px 16px);
+    --_isch-resource-area-row-height: var(--ionic-scheduler-resource-area-row-height, 48px);
+
+    /* ── Agenda ──────────────────────────────────────────────────────────────────────────────── */
+    --_isch-agenda-header-padding: var(--ionic-scheduler-agenda-header-padding, 0.5rem 0.75rem);
+    --_isch-agenda-row-padding: var(--ionic-scheduler-agenda-row-padding, 0.5rem 0.75rem);
+    /* The empty strip at the start of each row lines the list up with the time gutter of the day and
+       week views, so switching view does not shift the content sideways. At 0 it disappears. */
+    --_isch-agenda-gutter-width: var(--ionic-scheduler-agenda-gutter-width, 5rem);
+
+    /* Ionic's font, so the grid is not the one thing on the page in the browser default. */
+    font-family: var(--ion-font-family, inherit);
+}
+
+.ionic-scheduler {
+    display: flex;
+    flex-direction: column;
+    /*
+     * The component owns a height so that the SCROLLING happens inside it.
+     *
+     * With an auto height the whole schedule grows to fit its rows, the nearest page scroller is
+     * the one that moves, and every sticky header inside — the day headers, the timeline bands, the
+     * resource rail — scrolls away with it: that is the "the header disappears when I scroll" bug,
+     * and no amount of `position: sticky` fixes it, because sticky pins to the scrollport that is
+     * actually moving and none of them is.
+     *
+     * `100%` takes the height of whatever the Scheduler is dropped into. Inside `ion-content`, a
+     * flex child or anything else with a resolved height that is the page, and the rows scroll under
+     * a frozen header. Where the parent has no height of its own the percentage resolves to `auto`,
+     * which is the old behaviour rather than a collapsed component. `--ionic-scheduler-height` is
+     * for the pages in between: `calc(100dvh - 8rem)`, `70vh`, a fixed number of pixels.
+     */
+    block-size: var(--ionic-scheduler-height, 100%);
+    min-height: 0;
+    background: var(--_isch-background);
+    color: var(--_isch-color);
+    border: 1px solid var(--_isch-border-color);
+    border-radius: var(--_isch-border-radius);
+    overflow: hidden;
+}
+
+.ionic-scheduler-navigation {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Genuinely centred title: flex:1 on all three sides and not only on the middle one, or the
+   title drifts off centre as soon as the nav and the selector measure differently. */
+.ionic-scheduler-navigation,
+.ionic-scheduler-view-selector {
+    flex: 1 0 auto;
+}
+
+.ionic-scheduler-view-selector {
+    justify-content: flex-end;
+}
+
+/* nowrap + ellipsis and NOT wrap: the title is the header's visual anchor, and broken across
+   three lines by a wide view selector it changed the height of the whole bar. If it does not
+   fit, it is clipped. */
+.ionic-scheduler-title {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: var(--_isch-title-font-size);
+    font-weight: var(--_isch-title-font-weight);
+    color: var(--_isch-title-color);
+}
+
+.ionic-scheduler-view-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+}
+
+/* The label shown when there is only one view: a button that leads nowhere invites a click, so
+   with a single view available the selector prints text instead. */
+.ionic-scheduler-view-label {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--_isch-gutter-color);
+    white-space: nowrap;
+}
+
+/* The semantic components are CONTEXT BOUNDARIES, not boxes: used as a definition, their host
+   element lands inside the surface they replace — a flex cell, a grid — and as an inline
+   element it broke that layout: the children stopped being flex items of the parent, so a
+   margin-inline-start:auto pushed nothing and the gap disappeared. display:contents takes them
+   out of the layout and leaves their children where the renderer expects them, without taking
+   them out of the DOM: the data-slots and the test selectors are still there. */
+ionic-scheduler-event,
+ionic-scheduler-time-grid-event,
+ionic-scheduler-all-day-event,
+ionic-scheduler-month-event,
+ionic-scheduler-agenda-event,
+ionic-scheduler-day-header,
+ionic-scheduler-all-day-cell,
+ionic-scheduler-time-gutter,
+ionic-scheduler-time-grid-cell,
+ionic-scheduler-work-cell,
+ionic-scheduler-month-title,
+ionic-scheduler-month-header-cell,
+ionic-scheduler-month-cell,
+ionic-scheduler-month-cell-number,
+ionic-scheduler-month-day-cell,
+ionic-scheduler-month-more-link,
+ionic-scheduler-mini-month-header,
+ionic-scheduler-mini-month-cell,
+ionic-scheduler-agenda-date-header,
+ionic-scheduler-timeline-header-cell,
+ionic-scheduler-timeline-cell,
+ionic-scheduler-timeline-event,
+ionic-scheduler-resource-column-header,
+ionic-scheduler-resource-area-header,
+ionic-scheduler-resource-header,
+ionic-scheduler-resource,
+ionic-scheduler-resource-group,
+ionic-scheduler-resource-row,
+ionic-scheduler-resource-aggregate-badge {
+    display: contents;
+}
+
+.ionic-scheduler-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+}
+
+/*
+ * The timeline scrolls INSIDE itself, so its renderer has to be given the region's height rather
+ * than take its content's: it is the one view whose header, bands and resource rail all have to
+ * stay put while the lanes move, and they can only do that against a scrollport that is bounded.
+ * The other views scroll as one block in the content region above, where their own sticky heads
+ * already pin against the right box.
+ */
+ionic-scheduler-timeline-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-block-size: 0;
+}
+
+/* ── Time grid: day and week ─────────────────────────────────────────── */
+
+.ionic-scheduler-time-grid {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* The column minimum comes from a variable with the token as its fallback: when the columns are
+   resources rather than days there are many more of them and they need a different floor, and
+   the view is what decides that. */
+.ionic-scheduler-time-grid-header,
+.ionic-scheduler-time-grid-body,
+.ionic-scheduler-time-grid-groups {
+    display: grid;
+    grid-template-columns: var(--_isch-gutter-width) repeat(var(--ionic-scheduler-columns, 1), minmax(var(--ionic-scheduler-column-min-width, var(--_isch-day-min-width)), 1fr));
+}
+
+/* The whole head sticks as one unit and the two bands stack inside it by flow. With one sticky
+   band above another, both at inset-block-start: 0, the two land in the same place and the upper
+   covers the lower; with the wrapper stuck, the browser measures the height and nothing depends
+   on a calculation about the host's line height. */
+.ionic-scheduler-time-grid-head {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 2;
+    background: var(--_isch-weekday-background);
+}
+
+.ionic-scheduler-time-grid-groups {
+    background: var(--_isch-weekday-background);
+    border-bottom: 1px solid var(--_isch-border-color);
+}
+
+.ionic-scheduler-resource-column-header {
+    grid-column: span var(--ionic-scheduler-column-span, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: var(--_isch-day-header-padding);
+    border-inline-start: 1px solid var(--_isch-border-color);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.ionic-scheduler-time-grid-header {
+    background: var(--_isch-weekday-background);
+    border-bottom: 1px solid var(--_isch-border-color);
+}
+
+.ionic-scheduler-day-header-cell {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: var(--_isch-day-header-padding);
+    border-inline-start: 1px solid var(--_isch-border-color);
+    font-size: 0.8125rem;
+}
+
+.ionic-scheduler-day-header-number {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.ionic-scheduler-day-header-resource {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ionic-scheduler-day-header-weekday {
+    letter-spacing: 0.04em;
+    color: var(--_isch-gutter-color);
+}
+
+.ionic-scheduler-day-header-cell[data-today] .ionic-scheduler-day-header-weekday {
+    color: inherit;
+}
+
+.ionic-scheduler-day-header-cell[data-today] {
+    background: var(--_isch-today-background);
+    color: var(--_isch-today-color);
+    font-weight: 700;
+}
+
+.ionic-scheduler-day-header-cell[data-weekend] {
+    background: var(--_isch-weekend-background);
+}
+
+.ionic-scheduler-all-day-row {
+    display: grid;
+    grid-template-columns: var(--_isch-gutter-width) 1fr;
+    border-bottom: 1px solid var(--_isch-border-color);
+}
+
+.ionic-scheduler-all-day-gutter {
+    padding: 0.25rem 0.5rem;
+    font-size: var(--_isch-gutter-font-size);
+    color: var(--_isch-gutter-color);
+    text-align: end;
+}
+
+/* The same tracks as the header and the body: with a bare 1fr, as soon as the resource columns
+   overflowed horizontally the all-day events stopped lining up with their column. */
+.ionic-scheduler-all-day-lanes {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--ionic-scheduler-columns, 1), minmax(var(--ionic-scheduler-column-min-width, var(--_isch-day-min-width)), 1fr));
+    min-height: calc(var(--ionic-scheduler-all-day-rows, 1) * var(--_isch-all-day-row-height));
+}
+
+.ionic-scheduler-all-day-cell {
+    border-inline-start: 1px solid var(--_isch-border-color);
+}
+
+.ionic-scheduler-all-day-event,
+.ionic-scheduler-month-bar {
+    position: absolute;
+    box-sizing: border-box;
+    inset-block-start: calc(var(--ionic-scheduler-event-row, 0) * var(--_isch-all-day-row-height));
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    block-size: calc(var(--_isch-all-day-row-height) - 2px);
+    padding-inline: var(--_isch-event-padding-x);
+    border-radius: var(--_isch-event-border-radius);
+    border-inline-start: 3px solid var(--ionic-scheduler-event-border-accent, var(--_isch-event-border-accent));
+    background: color-mix(in srgb, var(--ionic-scheduler-event-border-accent, var(--_isch-event-border-accent)) var(--_isch-event-fill-opacity), var(--_isch-background));
+    color: var(--_isch-event-color);
+    font-size: var(--_isch-event-font-size);
+    font-weight: 600;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* The month's bars start just below the number band. */
+.ionic-scheduler-month-bar {
+    inset-block-start: calc(var(--_isch-month-cell-padding) + var(--_isch-month-number-height) + var(--ionic-scheduler-event-row, 0) * var(--_isch-all-day-row-height));
+    z-index: 1;
+}
+
+/* A timed event inside the month is dot + title + time, with no box: half a dozen filled
+   rectangles in a 6rem cell cannot be read. */
+
+.ionic-scheduler-time-gutter-spacer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--_isch-gutter-font-size);
+    color: var(--_isch-gutter-color);
+}
+
+.ionic-scheduler-time-gutter-slot {
+    position: relative;
+    block-size: var(--_isch-slot-height);
+    font-size: var(--_isch-gutter-font-size);
+    color: var(--_isch-gutter-color);
+    font-variant-numeric: tabular-nums;
+}
+
+/* The label is positioned and nowrap: broken across two lines it grows the strip and the hour
+   column stops lining up with the grid — which is exactly what happened. */
+.ionic-scheduler-time-gutter-label {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0.5rem;
+    transform: translateY(-50%);
+    white-space: nowrap;
+}
+
+.ionic-scheduler-time-gutter-slot:first-child .ionic-scheduler-time-gutter-label {
+    transform: none;
+}
+
+.ionic-scheduler-time-grid-column {
+    position: relative;
+    border-inline-start: 1px solid var(--_isch-border-color);
+}
+
+/* The hatching goes above the cell's background (business hours or not) and below the events,
+   just like today's tint: they are two different facts about the same cell and both have to
+   stay visible. */
+.ionic-scheduler-time-grid-cell[data-blocked],
+.ionic-scheduler-timeline-cell[data-blocked] {
+    background-image: var(--_isch-blocked-background);
+    cursor: not-allowed;
+}
+
+/* The whole column is tinted, not just its header: that is what lets you find today without
+   reading. It goes in a ::before above the cells and NOT as the column's background: the cells
+   paint a background of their own (business hours or not) and covered the tint of the column
+   behind them. The token is translucent, so the shading underneath still shows through, and the
+   events — later positioned siblings — stay above it. */
+.ionic-scheduler-time-grid-column[data-today]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--_isch-today-background);
+    pointer-events: none;
+}
+
+.ionic-scheduler-time-grid-cell {
+    block-size: var(--_isch-slot-height);
+    border-bottom: 1px dashed var(--_isch-border-color);
+}
+
+.ionic-scheduler-time-grid-cell[data-major] {
+    border-bottom-style: solid;
+}
+
+/* The out-of-hours shading only applies when the page CONFIGURED business hours: without that
+   condition, a grid with no hours declared came out entirely in the "non-working" colour, which
+   says the opposite of what it means. */
+.ionic-scheduler-time-grid-cell[data-business] {
+    background: var(--_isch-business-background);
+}
+
+.ionic-scheduler-time-grid[data-business-hours] .ionic-scheduler-time-grid-cell:not([data-business]) {
+    background: var(--_isch-non-business-background);
+}
+
+.ionic-scheduler-time-grid-event {
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 0.0625rem;
+    min-block-size: 1.25rem;
+    padding: 0.1875rem 0.375rem;
+    border-radius: var(--_isch-event-border-radius);
+    /* The accent tints the fill AND draws the border: the background comes from the event's own
+       colour at low opacity through color-mix, not from a fixed token, so each category stays
+       distinguishable. */
+    border-inline-start: 3px solid var(--ionic-scheduler-event-border-accent, var(--_isch-event-border-accent));
+    background: color-mix(in srgb, var(--ionic-scheduler-event-border-accent, var(--_isch-event-border-accent)) var(--_isch-event-fill-opacity), var(--_isch-background));
+    color: var(--_isch-event-color);
+    font-size: var(--_isch-event-font-size);
+    line-height: 1.25;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.ionic-scheduler-time-grid-event .ionic-scheduler-event-title {
+    font-weight: 600;
+}
+
+/* min-inline-size: 0 is what makes the ellipsis work inside a flex container; without it the
+   title forces the width and the event overflows instead of being clipped. */
+.ionic-scheduler-time-grid-event > * {
+    min-inline-size: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ionic-scheduler-time-grid-event[data-selected],
+.ionic-scheduler-month-event[data-selected],
+.ionic-scheduler-agenda-event[data-selected] {
+    box-shadow: 0 0 0 2px var(--_isch-focus-ring-color);
+}
+
+.ionic-scheduler-time-grid-event[data-continues-before] {
+    border-start-start-radius: 0;
+    border-start-end-radius: 0;
+}
+
+.ionic-scheduler-time-grid-event[data-continues-after] {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+}
+
+.ionic-scheduler-event-time {
+    flex: 0 0 auto;
+    font-size: var(--_isch-event-time-font-size);
+    font-variant-numeric: tabular-nums;
+    color: var(--_isch-gutter-color);
+}
+
+.ionic-scheduler-event-title {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* An empty cell's focus ring goes INSIDE: a time-grid cell is 28px tall and an outline drawn
+   outside it is covered by the next cell. Without this, arrow navigation moves an invisible
+   focus, which is worse than not navigating at all. */
+[data-nav-cell]:focus-visible {
+    outline: 0;
+    box-shadow: inset 0 0 0 2px var(--_isch-focus-ring-color);
+    z-index: 1;
+}
+
+/* ── Appointment slots ───────────────────────────────────────────────── */
+
+/* Behind the events (lower z-index, no pointer beyond the click) and in the theme's "available"
+   colour. A full slot is hatched like a blocked one, because as far as booking goes they are
+   the same thing. */
+.ionic-scheduler-appointment-slot {
+    position: absolute;
+    inset-inline: 0;
+    z-index: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 0.0625rem 0.25rem;
+    background: var(--_isch-slot-available-background);
+    border-block: 1px solid color-mix(in srgb, var(--_isch-accent-color) 35%, transparent);
+    font-size: var(--_isch-event-time-font-size);
+    color: var(--_isch-gutter-color);
+    cursor: pointer;
+}
+
+.ionic-scheduler-appointment-slot[data-full] {
+    background-image: var(--_isch-blocked-background);
+    cursor: not-allowed;
+}
+
+/* data-display=grid tints the slot across the whole cell with no border and no label: for when
+   what matters is the shape of the availability and not the detail. */
+.ionic-scheduler-appointment-slot[data-display='grid'] {
+    border-block: 0;
+}
+
+.ionic-scheduler-appointment-slot[data-display='grid'] .ionic-scheduler-appointment-slot-label {
+    display: none;
+}
+
+/* data-display=indicator tints nothing: a 3px bar at the column's edge, for a grid too dense to
+   paint backgrounds into. */
+.ionic-scheduler-appointment-slot[data-display='indicator'] {
+    inset-inline: auto 0;
+    inline-size: 3px;
+    padding: 0;
+    border-block: 0;
+    background: var(--_isch-accent-color);
+}
+
+.ionic-scheduler-appointment-slot[data-display='indicator'] .ionic-scheduler-appointment-slot-label {
+    display: none;
+}
+
+/* ── Drag and resize ─────────────────────────────────────────────────── */
+
+/* touch-action: none on the draggable surface and not on the container: without it the browser
+   reads a finger drag as a scroll and the event does not move; putting it any higher would kill
+   scrolling for the whole grid. */
+/* user-select: none on what can be dragged, and on the WHOLE Scheduler while a drag is under
+   way: on macOS the gesture started a text selection, and from then on the browser drags the
+   selection instead of letting the component follow the pointer. */
+[data-draggable],
+.ionic-scheduler-event-resize-handle {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+[data-draggable] {
+    cursor: grab;
+}
+
+.ionic-scheduler[data-interacting] {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+[data-dragging],
+[data-resizing] {
+    z-index: 4;
+    cursor: grabbing;
+    opacity: 0.85;
+    box-shadow: 0 4px 12px -6px rgba(0, 0, 0, 0.5);
+}
+
+/* The handle is a 6px strip over the event's edge. It has no background: the cursor is what
+   announces it, and a visible grip on every appointment fills the grid with noise. */
+.ionic-scheduler-event-resize-handle {
+    position: absolute;
+    z-index: 3;
+    touch-action: none;
+}
+
+.ionic-scheduler-time-grid-event .ionic-scheduler-event-resize-handle {
+    inset-inline: 0;
+    block-size: 6px;
+    cursor: ns-resize;
+}
+
+.ionic-scheduler-time-grid-event .ionic-scheduler-event-resize-handle[data-edge='start'] {
+    inset-block-start: 0;
+}
+
+.ionic-scheduler-time-grid-event .ionic-scheduler-event-resize-handle[data-edge='end'] {
+    inset-block-end: 0;
+}
+
+.ionic-scheduler-timeline-event .ionic-scheduler-event-resize-handle {
+    inset-block: 0;
+    inline-size: 6px;
+    cursor: ew-resize;
+}
+
+.ionic-scheduler-timeline-event .ionic-scheduler-event-resize-handle[data-edge='start'] {
+    inset-inline-start: 0;
+}
+
+.ionic-scheduler-timeline-event .ionic-scheduler-event-resize-handle[data-edge='end'] {
+    inset-inline-end: 0;
+}
+
+.ionic-scheduler-now-indicator {
+    position: absolute;
+    inset-inline: 0;
+    z-index: 2;
+    block-size: 0;
+    border-top: 2px solid var(--_isch-now-indicator-color);
+    pointer-events: none;
+}
+
+.ionic-scheduler-now-indicator::before {
+    content: '';
+    position: absolute;
+    inset-block-start: -0.25rem;
+    inset-inline-start: 0;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 50%;
+    background: var(--_isch-now-indicator-color);
+}
+
+/* ── Month grid ──────────────────────────────────────────────────────── */
+
+.ionic-scheduler-month {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Caption of one grid in a multi-month view. It sits above the weekday row and repeats the
+   month name the header cannot carry once the range covers more than one. */
+.ionic-scheduler-month-title {
+    padding: 0.5rem 0.75rem;
+    background: var(--_isch-weekday-background);
+    border-bottom: 1px solid var(--_isch-border-color);
+    font-weight: 600;
+}
+
+/* Only the FIRST letter: text-transform capitalize turns the Spanish "septiembre de 2026" into
+   "Septiembre De 2026", and most locales print the month lowercase. */
+.ionic-scheduler-month-title::first-letter {
+    text-transform: uppercase;
+}
+
+.ionic-scheduler-month-header {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(var(--_isch-month-day-min-width), 1fr));
+    background: var(--_isch-weekday-background);
+    border-bottom: 1px solid var(--_isch-border-color);
+}
+
+/* The same separators as the body, minus the first: without them the weekday row floated above
+   a grid that has them. */
+.ionic-scheduler-month-header-cell + .ionic-scheduler-month-header-cell {
+    border-inline-start: 1px solid var(--_isch-border-color);
+}
+
+.ionic-scheduler-month-header-cell {
+    padding: 0.5rem;
+    font-size: var(--_isch-gutter-font-size);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--_isch-gutter-color);
+    text-align: center;
+}
+
+.ionic-scheduler-month-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.ionic-scheduler-month-week {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(var(--_isch-month-day-min-width), 1fr));
+    flex: 1;
+    min-height: calc(var(--_isch-month-cell-min-height) + var(--ionic-scheduler-month-rows, 1) * var(--_isch-all-day-row-height));
+    border-bottom: 1px solid var(--_isch-border-color);
+}
+
+.ionic-scheduler-all-day-event {
+    z-index: 1;
+}
+
+.ionic-scheduler-month-cell {
+    display: flex;
+    flex-direction: column;
+    padding: var(--_isch-month-cell-padding);
+    border-inline-start: 1px solid var(--_isch-border-color);
+    cursor: pointer;
+}
+
+.ionic-scheduler-month-cell:hover {
+    background: var(--_isch-day-hover-background);
+}
+
+.ionic-scheduler-month-cell[data-today] {
+    background: var(--_isch-today-background);
+    color: var(--_isch-today-color);
+}
+
+.ionic-scheduler-month-cell[data-weekend] {
+    background: var(--_isch-weekend-background);
+}
+
+.ionic-scheduler-month-cell[data-other-month] {
+    background: var(--_isch-other-month-background);
+    color: var(--_isch-other-month-color);
+}
+
+.ionic-scheduler-month-cell[data-selected] {
+    background: var(--_isch-selected-background);
+    color: var(--_isch-selected-color);
+}
+
+/* A fixed-height band for the number: it is what the events below reserve, so its height must
+   NOT depend on the content or the bars would ride over it. */
+.ionic-scheduler-month-cell-number {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    block-size: var(--_isch-month-number-height);
+    font-size: var(--_isch-month-number-font-size);
+    font-weight: 600;
+}
+
+.ionic-scheduler-month-cell[data-today] .ionic-scheduler-month-cell-number {
+    /* Here the solid fill does belong, with its contrast colour: mark the day, do not invert the
+       whole cell. */
+    inline-size: var(--_isch-month-number-height);
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--_isch-today-badge-background);
+    color: var(--_isch-today-badge-color);
+    font-weight: 600;
+}
+
+/* Today does NOT tint the month cell: the circle around the number already says so and the tint
+   would fight the events' fills. In the time grid it does, because there is no number there.
+   The :not() is essential: at the same specificity as the [data-selected] rule and coming
+   after it, today won and selecting today was invisible. */
+.ionic-scheduler-month-cell[data-today]:not([data-selected]) {
+    background: transparent;
+}
+
+.ionic-scheduler-month-day-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.0625rem;
+    flex: 1;
+    min-height: 0;
+}
+
+/* A single-day event is a row INSIDE the cell, not a positioned bar: as a bar it measured
+   2h/168h of the week, which is 7px, and all you saw was the dot. */
+.ionic-scheduler-month-event {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    inline-size: 100%;
+    min-block-size: var(--_isch-all-day-row-height);
+    padding-inline: 0.125rem;
+    border: 0;
+    border-radius: var(--_isch-event-border-radius);
+    background: transparent;
+    color: var(--_isch-event-color);
+    font-size: var(--_isch-event-font-size);
+    text-align: start;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.ionic-scheduler-month-event:hover {
+    background: var(--_isch-day-hover-background);
+}
+
+.ionic-scheduler-month-event .ionic-scheduler-event-title {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ionic-scheduler-month-event .ionic-scheduler-event-time {
+    margin-inline-start: auto;
+    white-space: nowrap;
+}
+
+/* The cell's list starts below the bars that cross THAT day. */
+.ionic-scheduler-month-day-cell {
+    margin-block-start: calc(var(--ionic-scheduler-bar-rows, 0) * var(--_isch-all-day-row-height));
+}
+
+.ionic-scheduler-event-dot {
+    flex: 0 0 auto;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 50%;
+    background: var(--_isch-event-border-accent);
+}
+
+/* Right under the last event and not at the bottom of the cell: with margin-top:auto the link
+   drifted away from the list it summarises and floated in the gap. */
+.ionic-scheduler-month-more-link {
+    align-self: flex-start;
+    padding: 0 0.25rem;
+    border: 0;
+    background: transparent;
+    color: var(--_isch-more-link-color);
+    font-size: var(--_isch-event-font-size);
+    cursor: pointer;
+}
+
+/* Header of a per-resource month grid, and the resource label inside a cell. */
+.ionic-scheduler-month-resource-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: var(--_isch-resource-area-row-padding);
+    background: var(--_isch-weekday-background);
+    border-bottom: 1px solid var(--_isch-border-color);
+    font-weight: 600;
+}
+
+/* Stacked grids need a rule between them, or the last day of one and the first of the next read
+   as the same grid. */
+.ionic-scheduler-view-month .ionic-scheduler-month + .ionic-scheduler-month {
+    border-top: 2px solid var(--_isch-border-color);
+}
+
+/* Several months share the height instead of each taking a whole viewport: a grid that shrinks
+   below its six rows would clip them, so it keeps its own size and the view scrolls. */
+.ionic-scheduler-view-month[data-month-count]:not([data-month-count='1']) .ionic-scheduler-month {
+    flex: 0 0 auto;
+}
+
+.ionic-scheduler-month-resource-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding-inline: 0.125rem;
+    font-size: var(--_isch-event-time-font-size);
+    color: var(--_isch-gutter-color);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* ── Agenda ───────────────────────────────────────────────────────────── */
+
+.ionic-scheduler-agenda {
+    display: flex;
+    flex-direction: column;
+}
+
+.ionic-scheduler-agenda-date-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: var(--_isch-agenda-header-padding);
+    background: var(--_isch-weekday-background);
+    border-bottom: 1px solid var(--_isch-border-color);
+    position: sticky;
+    top: 0;
+}
+
+.ionic-scheduler-agenda-heading {
+    display: flex;
+    flex-direction: column;
+}
+
+.ionic-scheduler-agenda-date-header[data-today] {
+    background: var(--_isch-today-background);
+    color: var(--_isch-today-color);
+}
+
+.ionic-scheduler-agenda-day {
+    font-size: var(--_isch-gutter-font-size);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--_isch-accent-color);
+}
+
+.ionic-scheduler-agenda-date {
+    font-weight: 600;
+}
+
+.ionic-scheduler-agenda-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-inline-start: auto;
+    min-inline-size: 1.5rem;
+    block-size: 1.5rem;
+    padding-inline: 0.375rem;
+    border: 1px solid var(--_isch-border-color);
+    border-radius: 999px;
+    font-size: var(--_isch-gutter-font-size);
+    color: var(--_isch-gutter-color);
+    font-variant-numeric: tabular-nums;
+}
+
+/* The row is gutter + card and not a single box: the accent pressed against the container's
+   edge read as a border of the panel, and the list ended up misaligned with the time gutter of
+   the day and week views.
+   Neither of the two carries a border: with a line under the row and another beside the
+   gutter, the agenda read as a table of empty cells. What separates appointments is the air
+   between cards, and what separates days is the sticky header. */
+.ionic-scheduler-agenda-row {
+    display: grid;
+    grid-template-columns: var(--_isch-agenda-gutter-width) minmax(0, 1fr);
+}
+
+.ionic-scheduler-agenda-event {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-block: 0.25rem;
+    margin-inline-end: 0.5rem;
+    padding: var(--_isch-agenda-row-padding);
+    border-start-end-radius: var(--_isch-event-border-radius);
+    border-end-end-radius: var(--_isch-event-border-radius);
+    /* The same tinted fill as an event in the grid: in the agenda the category's colour is the
+       only hint of what each appointment is, because there is no geometry placing it. */
+    border-inline-start: 3px solid var(--ionic-scheduler-event-border-accent, var(--_isch-event-border-accent));
+    background: color-mix(in srgb, var(--ionic-scheduler-event-border-accent, var(--_isch-event-border-accent)) var(--_isch-event-fill-opacity), var(--_isch-background));
+    color: var(--_isch-event-color);
+    cursor: pointer;
+}
+
+.ionic-scheduler-agenda-event:hover {
+    background: color-mix(in srgb, var(--ionic-scheduler-event-border-accent, var(--_isch-event-border-accent)) calc(var(--_isch-event-fill-opacity) + 8%), var(--_isch-background));
+}
+
+.ionic-scheduler-agenda-event .ionic-scheduler-event-title {
+    min-inline-size: 0;
+}
+
+/* At the end of the row and not next to the title: the time is supporting information, and in a
+   column of its own the list can be scanned vertically reading nothing but times. */
+.ionic-scheduler-agenda-event-time {
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+    font-variant-numeric: tabular-nums;
+    color: var(--_isch-gutter-color);
+    font-size: var(--_isch-event-time-font-size);
+}
+
+.ionic-scheduler-agenda-empty,
+.ionic-scheduler-view-unavailable {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--_isch-gutter-color);
+}
+
+/* ── Year: twelve mini-months ────────────────────────────────────────── */
+
+/* auto-fill over the card's minimum width and not four fixed columns: with four fixed, a 730px
+   panel left the mini-month at 150px and the day cell at 19px, which is numbers touching. This
+   way the year lays out as many columns as fit — four on a wide screen, three in a docs card,
+   one on a phone — and the day cell never drops below a legible size. It replaces the media
+   query that was here: the threshold comes from the content and not from the viewport, which is
+   what matters when the Scheduler lives inside a panel. */
+.ionic-scheduler-year {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--_isch-mini-month-min-width), 1fr));
+    gap: var(--_isch-mini-month-gap);
+    padding: var(--_isch-mini-month-gap);
+    overflow: auto;
+}
+
+/* No padding on the card: the header and the grid carry it. With padding here the interior lost
+   24px of width and the mini-month came out cramped. */
+.ionic-scheduler-mini-month {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--_isch-border-color);
+    border-radius: var(--_isch-mini-month-border-radius);
+    overflow: hidden;
+}
+
+.ionic-scheduler-mini-month-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--_isch-mini-month-padding);
+    /* A separator under the month's name: without it the header and the grid read as one block
+       and the mini-month loses the air that makes it look like a calendar. */
+    border-bottom: 1px solid var(--_isch-border-color);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Columns at 1fr: they take up the WHOLE width of the card. Pinning them to the day's size left
+   the grid narrower than the card and off centre against the header. */
+.ionic-scheduler-mini-month-grid {
+    display: grid;
+    /* minmax(0,1fr) and not a bare 1fr: 1fr is minmax(auto,1fr) and the number's minimum width
+       widens the column, so the seven of them added up to more than the card. With 0 they
+       divide it exactly. NOTE: no backticks in these comments, they close the template
+       literal. */
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    padding-block-start: var(--_isch-mini-month-grid-padding);
+}
+
+.ionic-scheduler-mini-month-weekday {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    block-size: var(--_isch-mini-month-day-size);
+    font-size: var(--_isch-gutter-font-size);
+    color: var(--_isch-gutter-color);
+}
+
+.ionic-scheduler-mini-month-day {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* A SQUARE cell: the column sets the width (1fr of the card's width) and aspect-ratio
+       matches the height to it. With a fixed block-size the cell came out rectangular and
+       today's badge an oval. The min-block-size only kicks in on very narrow cards, where 1fr
+       falls below a legible size for the number. */
+    aspect-ratio: 1;
+    min-block-size: var(--_isch-mini-month-day-size);
+    border: 0;
+    /* A 50% radius: over a square cell that gives an exact circle, both on hover and for today. */
+    border-radius: 50%;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font-size: var(--_isch-mini-month-font-size);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.ionic-scheduler-mini-month-day:hover {
+    background: var(--_isch-day-hover-background);
+}
+
+/* The weekend in a colour of its own: in a 17px grid with no visible header that is what lets
+   you find Saturday without counting columns. It does not apply to the neighbouring month,
+   which is already dimmed, nor to today, which has its circle. */
+.ionic-scheduler-mini-month-day-weekend:not(.ionic-scheduler-mini-month-day-other):not([data-today]) {
+    color: var(--_isch-mini-month-weekend-color);
+}
+
+/* Empty but square like the rest: it only holds its place in the grid so the month starts in
+   the right column and the six rows measure the same across all twelve mini-months. */
+.ionic-scheduler-mini-month-day-other {
+    color: var(--_isch-other-month-color);
+    pointer-events: none;
+}
+
+/* :not(-other) because the grid is a fixed 42 days and carries days from the next month: without
+   the filter, 8 September also drew its circle on August's card, in an empty cell. */
+.ionic-scheduler-mini-month-day[data-selected]:not([data-today]):not(.ionic-scheduler-mini-month-day-other) {
+    background: var(--_isch-selected-background);
+    color: var(--_isch-selected-color);
+}
+
+.ionic-scheduler-mini-month-day[data-today]:not(.ionic-scheduler-mini-month-day-other) {
+    background: var(--_isch-today-badge-background);
+    color: var(--_isch-today-badge-color);
+    font-weight: 600;
+}
+
+/* The indicator goes BELOW the number, not beside it: at this size an inline dot pushes the
+   figure and knocks the mini-month grid out of true. The offset is in % and not in px because
+   the cell grows with the card's width, and a fixed 1px pinned it to the edge of the circle. */
+.ionic-scheduler-mini-month-indicator {
+    position: absolute;
+    inset-block-end: 12%;
+    inline-size: 0.25rem;
+    block-size: 0.25rem;
+    border-radius: 50%;
+    background: var(--ionic-scheduler-mini-month-indicator-background, var(--_isch-accent-color));
+}
+
+.ionic-scheduler-mini-month-day[data-today] .ionic-scheduler-mini-month-indicator {
+    background: currentColor;
+}
+
+/* ── Timeline: the day laid out horizontally ─────────────────────────── */
+
+.ionic-scheduler-timeline {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* The resource rail is sticky INSIDE the one scrollport, not a scroller of its own: two parallel
+   scrollers have to be synchronised by hand and drift apart as soon as anything else moves the
+   page. As a flex item its containing block is the scroller's content box, which is what lets it
+   stay pinned to the start of the line for the whole horizontal scroll — a grid item could not,
+   because its containing block would be its own column and there would be nowhere to shift to. */
+.ionic-scheduler-resource-area {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 3;
+    flex: 0 0 var(--_isch-resource-area-width);
+    inline-size: var(--_isch-resource-area-width);
+    background: var(--_isch-resource-area-background);
+    border-inline-end: 1px solid var(--_isch-border-color);
+}
+
+/* The gap above the rail measures whatever the axis header measures: however many context bands
+   the scale has, plus the column row. With a fixed 3, a month timeline — which carries only the
+   period band — left the rail a whole band out of place. */
+.ionic-scheduler-timeline-resource .ionic-scheduler-resource-area-header {
+    block-size: calc((var(--ionic-scheduler-timeline-tiers, 0) + 1) * var(--_isch-timeline-header-height));
+}
+
+/* The corner is the one cell that has to hold BOTH freezes: the rail keeps it against the start
+   of the line, and this keeps it against the top while the rows scroll under it. */
+.ionic-scheduler-resource-area-header {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    block-size: var(--_isch-timeline-header-height);
+    padding: var(--_isch-resource-area-header-padding);
+    background: var(--_isch-weekday-background);
+    border-bottom: 1px solid var(--_isch-border-color);
+    font-weight: 600;
+}
+
+.ionic-scheduler-resource {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-block-size: calc(var(--ionic-scheduler-timeline-rows, 1) * var(--ionic-scheduler-timeline-row-height, var(--_isch-resource-area-row-height)));
+    padding: var(--_isch-resource-area-row-padding);
+    border-bottom: 1px solid var(--_isch-border-color);
+}
+
+.ionic-scheduler-resource-dot {
+    flex: 0 0 auto;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 50%;
+    background: var(--_isch-event-border-accent);
+}
+
+.ionic-scheduler-resource-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ionic-scheduler-resource-count {
+    margin-inline-start: auto;
+    font-size: var(--_isch-gutter-font-size);
+    color: var(--_isch-gutter-color);
+    font-variant-numeric: tabular-nums;
+}
+
+/* The one scrollport: the rail and the axis are its two columns, so a vertical scroll moves the
+   resource names and their lanes together while the header bands stay stuck to the top. */
+.ionic-scheduler-timeline-scroll {
+    flex: 1;
+    min-inline-size: 0;
+    min-block-size: 0;
+    overflow: auto;
+}
+
+/* As wide as the axis it holds, and never narrower than the scrollport.
+   This is the box the rail sticks INSIDE, and it has to be the full width of the content: a sticky
+   element is clamped to its containing block, so against the scrollport's own content box the rail
+   would come unstuck the moment the axis scrolled further than one screen. `max-content` measures
+   the axis; `min-inline-size: 100%` keeps the rail's border and the lane backgrounds running the
+   whole way when the axis is narrower than the viewport. */
+.ionic-scheduler-timeline-canvas {
+    display: flex;
+    inline-size: max-content;
+    min-inline-size: 100%;
+    min-block-size: 100%;
+}
+
+/* Grows to fill a wide container, never shrinks below the axis it has to draw: the columns are
+   minmax(slotWidth, 1fr), so shrinking would squeeze 168 hours into the viewport instead of
+   scrolling them. */
+.ionic-scheduler-timeline-axis {
+    flex: 1 0 auto;
+    min-inline-size: 0;
+}
+
+.ionic-scheduler-timeline-header,
+.ionic-scheduler-timeline-cells {
+    display: grid;
+    grid-template-columns: repeat(var(--ionic-scheduler-timeline-cols, 1), minmax(var(--_isch-timeline-slot-width), 1fr));
+}
+
+/* The bands share the axis's column template, and each cell spans the ones it owns through
+   grid-column: span. It is the only thing that keeps them squared with the hours when the axis
+   is 168 columns wide and scrolls horizontally. */
+.ionic-scheduler-timeline-tier {
+    display: grid;
+    grid-template-columns: repeat(var(--ionic-scheduler-timeline-cols, 1), minmax(var(--_isch-timeline-slot-width), 1fr));
+    position: sticky;
+    inset-block-start: calc(var(--ionic-scheduler-timeline-tier-index, 0) * var(--_isch-timeline-header-height));
+    /* Above everything the body draws. At the now indicator's own z-index the two tied and the
+       later element won, so the red line ran across the month band and the day row. */
+    z-index: 2;
+    /* And opaque underneath the cells, not only through them: a cell that falls on today paints
+       `--_isch-today-background`, which is a `color-mix` with transparent. Over a band with no
+       background of its own, what that tint let through was the grid — rows and the now line
+       sliding past behind the month. */
+    background: var(--_isch-weekday-background);
+}
+
+/* NO overflow: hidden. The label inside is sticky, and an ancestor with clipped overflow becomes
+   its scroll container: the label stuck to the leading edge of its own cell — several screens
+   away — instead of to the axis's, and the band came out empty. */
+.ionic-scheduler-timeline-tier-cell {
+    grid-column: span var(--ionic-scheduler-timeline-span, 1);
+    display: flex;
+    align-items: center;
+    block-size: var(--_isch-timeline-header-height);
+    background: var(--_isch-weekday-background);
+    border-bottom: 1px solid var(--_isch-border-color);
+    white-space: nowrap;
+}
+
+/* Sticky within its own cell: as long as the period is still in view, so is its name, even when
+   the cell starts several screens back. */
+.ionic-scheduler-timeline-tier-label {
+    position: sticky;
+    inset-inline-start: 0;
+    max-inline-size: 100%;
+    padding-inline: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* With a resource rail the start of the scrollport is not the start of what can be seen: the rail
+   is sticky over it. A label pinned to 0 slides underneath and is clipped by it — the month came
+   out reading "026" against the edge of the rail — so where there is a rail the label stops where
+   the rail ends. */
+.ionic-scheduler-timeline-resource .ionic-scheduler-timeline-tier-label {
+    inset-inline-start: var(--_isch-resource-area-width);
+}
+
+.ionic-scheduler-timeline-tier-cell + .ionic-scheduler-timeline-tier-cell {
+    border-inline-start: 1px solid var(--_isch-border-color);
+}
+
+.ionic-scheduler-timeline-tier[data-tier='period'] .ionic-scheduler-timeline-tier-cell {
+    font-weight: 600;
+}
+
+.ionic-scheduler-timeline-tier[data-tier='day'] .ionic-scheduler-timeline-tier-cell {
+    font-size: var(--_isch-gutter-font-size);
+    color: var(--_isch-gutter-color);
+}
+
+.ionic-scheduler-timeline-tier-cell[data-today],
+.ionic-scheduler-timeline-header-cell[data-today] {
+    background: var(--_isch-today-background);
+    color: var(--_isch-today-color);
+    font-weight: 600;
+}
+
+/* Stuck below the bands and not at 0: otherwise a vertical scroll rides the column row over the
+   period. */
+.ionic-scheduler-timeline-header {
+    position: sticky;
+    inset-block-start: calc(var(--ionic-scheduler-timeline-tiers, 0) * var(--_isch-timeline-header-height));
+    z-index: 2;
+    block-size: var(--_isch-timeline-header-height);
+    background: var(--_isch-weekday-background);
+    border-bottom: 1px solid var(--_isch-border-color);
+}
+
+.ionic-scheduler-timeline-header-cell {
+    display: flex;
+    align-items: center;
+    padding-inline: 0.375rem;
+    border-inline-start: 1px solid var(--_isch-border-color);
+    font-size: var(--_isch-gutter-font-size);
+    color: var(--_isch-gutter-color);
+    white-space: nowrap;
+}
+
+/* The lane measures the same as the axis — not the same as the container — because an event's
+   width is a % and resolves against its positioned parent. Without this a 4 h event was drawn
+   at a third of its size as soon as the timeline needed to scroll. */
+.ionic-scheduler-timeline-lane,
+.ionic-scheduler-timeline-header,
+.ionic-scheduler-timeline-tier,
+.ionic-scheduler-timeline-body {
+    inline-size: max(100%, calc(var(--ionic-scheduler-timeline-cols, 1) * var(--_isch-timeline-slot-width)));
+}
+
+/* El cuerpo es el contenedor de posicion de la linea de ahora: sin esto el absolute se escapa al
+   primer ancestro posicionado —la pagina— y la linea cruza el documento entero. */
+.ionic-scheduler-timeline-body {
+    position: relative;
+}
+
+.ionic-scheduler-timeline-lane {
+    position: relative;
+    min-block-size: calc(var(--ionic-scheduler-timeline-rows, 1) * var(--ionic-scheduler-timeline-row-height, var(--_isch-timeline-row-height)));
+    border-bottom: 1px solid var(--_isch-border-color);
+}
+
+.ionic-scheduler-timeline-cells {
+    position: absolute;
+    inset: 0;
+}
+
+.ionic-scheduler-timeline-cell {
+    border-inline-start: 1px dashed var(--_isch-border-color);
+}
+
+.ionic-scheduler-timeline-cell[data-major] {
+    border-inline-start-style: solid;
+}
+
+/* Today is tinted horizontally too: it is the only hint of where the current day falls when the
+   axis spans a week, a month or a year and you have to scroll to find it. */
+.ionic-scheduler-timeline-cell[data-today] {
+    background: var(--_isch-today-background);
+}
+
+.ionic-scheduler-timeline-event {
+    position: absolute;
+    box-sizing: border-box;
+    inset-block-start: calc(var(--ionic-scheduler-event-row, 0) * var(--_isch-timeline-row-height) + (var(--_isch-timeline-row-height) - var(--_isch-timeline-event-height)) / 2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+    block-size: var(--_isch-timeline-event-height);
+    padding-inline: var(--_isch-event-padding-x);
+    border-radius: var(--_isch-timeline-event-border-radius);
+    border-inline-start: 3px solid var(--ionic-scheduler-event-border-accent, var(--_isch-event-border-accent));
+    background: color-mix(in srgb, var(--ionic-scheduler-event-border-accent, var(--_isch-event-border-accent)) var(--_isch-event-fill-opacity), var(--_isch-background));
+    color: var(--_isch-event-color);
+    font-size: var(--_isch-event-font-size);
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.ionic-scheduler-timeline-event .ionic-scheduler-event-title {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ionic-scheduler-timeline-empty {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--_isch-gutter-color);
+}
+
+/* ── Legend, selection and loading ───────────────────────────────────── */
+
+.ionic-scheduler-category-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    padding: var(--_isch-legend-padding);
+    border-bottom: 1px solid var(--_isch-border-color);
+}
+
+.ionic-scheduler-category-legend-swatch {
+    inline-size: 0.625rem;
+    block-size: 0.625rem;
+    border-radius: 50%;
+}
+
+.ionic-scheduler-category-legend-count {
+    font-variant-numeric: tabular-nums;
+    color: var(--_isch-category-legend-count-color);
+}
+
+.ionic-scheduler-selection-toolbar:not([data-selection-active]) {
+    display: none;
+}
+
+.ionic-scheduler-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.ionic-scheduler-overlay-title {
+    font-weight: 600;
+}
+
+.ionic-scheduler-overlay-time {
+    font-size: var(--_isch-event-time-font-size);
+    color: var(--_isch-gutter-color);
+}
+
+.ionic-scheduler-overlay-actions {
+    display: flex;
+    gap: 0.375rem;
+}
+
+.ionic-scheduler[data-disabled] {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* La vertical de ahora en el timeline: mismo color que la horizontal de la rejilla, porque son
+   el mismo hecho en otro eje. Por encima de las celdas y por debajo de los eventos. */
+.ionic-scheduler-timeline-now-indicator {
+    position: absolute;
+    inset-block: 0;
+    inline-size: 0;
+    border-inline-start: 2px solid var(--_isch-now-indicator-color);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* eventShell=none quita la CAJA del evento y nada mas: la superficie sigue posicionada, sigue
+   siendo enfocable y sigue anclando los overlays, porque eso es del componente. Lo que se va es
+   lo que la pagina va a dibujar ella. */
+.ionic-scheduler[data-event-shell='none'] .ionic-scheduler-time-grid-event,
+.ionic-scheduler[data-event-shell='none'] .ionic-scheduler-all-day-event,
+.ionic-scheduler[data-event-shell='none'] .ionic-scheduler-month-event,
+.ionic-scheduler[data-event-shell='none'] .ionic-scheduler-timeline-event,
+.ionic-scheduler[data-event-shell='none'] .ionic-scheduler-agenda-event {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    box-shadow: none;
+    color: inherit;
+}
+
+/* La cabecera de impresion no se ve en pantalla: la hoja necesita un titulo porque no lleva el
+   header del componente, y la pantalla ya lo tiene. */
+.ionic-scheduler-print-header {
+    display: none;
+}
+
+/* ── Density and lane sizing ──────────────────────────────────────────── */
+
+/* compact does not change the type, it changes the HEIGHTS, which is what decides how many rows
+   fit on a screen. The measurements are written out here rather than declared as custom
+   properties, because in this repo a stylesheet consumes variables and a component host is what
+   sets them. */
+.ionic-scheduler[data-density='compact'] .ionic-scheduler-time-gutter-slot,
+.ionic-scheduler[data-density='compact'] .ionic-scheduler-time-grid-cell,
+.ionic-scheduler[data-density='compact'] .ionic-scheduler-work-cell {
+    block-size: 1.375rem;
+}
+
+.ionic-scheduler[data-density='compact'] .ionic-scheduler-all-day-row {
+    min-height: calc(var(--ionic-scheduler-all-day-rows, 1) * 1.125rem);
+}
+
+.ionic-scheduler[data-density='compact'] .ionic-scheduler-agenda-event {
+    padding: 0.25rem 0.5rem;
+    margin-block: 0.125rem;
+}
+
+.ionic-scheduler[data-density='compact'] .ionic-scheduler-month-cell {
+    min-height: calc(var(--_isch-month-cell-min-height) * 0.75 + var(--ionic-scheduler-month-rows, 1) * 1.125rem);
+}
+
+.ionic-scheduler[data-density='compact'] .ionic-scheduler-day-header-cell,
+.ionic-scheduler[data-density='compact'] .ionic-scheduler-resource-column-header,
+.ionic-scheduler[data-density='compact'] .ionic-scheduler-resource {
+    padding-block: 0.125rem;
+}
+
+/* Without rowAutoHeight a lane is ONE row tall and the rest is clipped: that is what keeps every
+   resource the same height on an operations wall, where comparing lanes matters more than seeing
+   every overlap. */
+.ionic-scheduler:not([data-row-auto-height]) .ionic-scheduler-timeline-lane {
+    min-block-size: var(--ionic-scheduler-timeline-row-height, var(--_isch-timeline-row-height));
+    block-size: var(--ionic-scheduler-timeline-row-height, var(--_isch-timeline-row-height));
+    overflow: hidden;
+}
+
+.ionic-scheduler:not([data-row-auto-height]) .ionic-scheduler-resource {
+    min-block-size: var(--ionic-scheduler-timeline-row-height, var(--_isch-resource-area-row-height));
+    block-size: var(--ionic-scheduler-timeline-row-height, var(--_isch-resource-area-row-height));
+}
+
+/* A group lane reads differently from a resource lane: without that, a collapsible hierarchy
+   looks like a flat list with indentation. */
+.ionic-scheduler-resource[data-group] {
+    font-weight: 600;
+    background: var(--_isch-weekday-background);
+}
+
+.ionic-scheduler-resource-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 1rem;
+    block-size: 1rem;
+    flex: 0 0 auto;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.ionic-scheduler-resource-toggle::before {
+    content: '';
+    inline-size: 0.375rem;
+    block-size: 0.375rem;
+    border-inline-end: 2px solid currentColor;
+    border-block-end: 2px solid currentColor;
+    /* The tip rotates rather than swapping glyph: one arrow per state is two things to keep in
+       step, and in RTL the closed one points the wrong way. */
+    transform: rotate(-45deg);
+    transition: transform 0.15s ease;
+}
+
+.ionic-scheduler-resource-toggle[aria-expanded='true']::before {
+    transform: rotate(45deg);
+}
+
+.ionic-scheduler[data-rtl] .ionic-scheduler-resource-toggle[aria-expanded='false']::before {
+    transform: rotate(135deg);
+}
+
+/* ── Printing ────────────────────────────────────────────────────────── */
+
+/* A printed Scheduler has neither scrolling nor sticky headers: what on screen is a scrolling
+   window is, on paper, all of the content at once. Without this you print the visible slice and
+   nothing else, which is the classic failure of printing a calendar. */
+@media print {
+    /* Imprimir ESTE horario y no la pagina que lo contiene. El resto sale del FLUJO con display:
+       none y no con visibility: ocultar sin quitar el hueco deja el documento midiendo lo que
+       media, o sea cincuenta hojas en blanco detras del horario. Lo que se imprime es una copia
+       que print() cuelga de body, precisamente para que baste con apagar a sus hermanos. */
+    html[data-ionic-scheduler-printing] body > *:not(#ionic-scheduler-print-root) {
+        display: none !important;
+    }
+
+    html[data-ionic-scheduler-printing] #ionic-scheduler-print-root {
+        display: block;
+        margin: 0;
+    }
+
+    /* Sin color el navegador imprime los rellenos en blanco, que es lo que convierte cuarenta
+       citas distintas en cuarenta citas iguales. Se puede pedir en gris a proposito. */
+    .ionic-scheduler[data-print-color='false'] .ionic-scheduler-time-grid-event,
+    .ionic-scheduler[data-print-color='false'] .ionic-scheduler-all-day-event,
+    .ionic-scheduler[data-print-color='false'] .ionic-scheduler-month-event,
+    .ionic-scheduler[data-print-color='false'] .ionic-scheduler-timeline-event,
+    .ionic-scheduler[data-print-color='false'] .ionic-scheduler-agenda-event {
+        background: transparent;
+        border: 1px solid var(--_isch-border-color);
+        color: var(--_isch-color);
+    }
+
+    .ionic-scheduler[data-print-color='false'] .ionic-scheduler-event-dot,
+    .ionic-scheduler[data-print-color='false'] .ionic-scheduler-resource-dot {
+        display: none;
+    }
+
+    /* La cabecera impresa solo existe en papel: en pantalla el titulo ya esta en el header. */
+    .ionic-scheduler-print-header {
+        display: block;
+        margin-block-end: 0.75rem;
+        padding-block-end: 0.5rem;
+        border-bottom: 1px solid var(--_isch-border-color);
+    }
+
+    .ionic-scheduler[data-print-chrome='false'] .ionic-scheduler-print-header {
+        display: none;
+    }
+
+    .ionic-scheduler {
+        border: 0;
+        block-size: auto !important;
+        max-block-size: none !important;
+    }
+
+    .ionic-scheduler-content,
+    .ionic-scheduler-timeline,
+    .ionic-scheduler-timeline-scroll,
+    .ionic-scheduler-year {
+        overflow: visible !important;
+    }
+
+    /* Sticky means nothing on paper, and on top of that it lays the header over the content of
+       the first page. */
+    .ionic-scheduler-time-grid-header,
+    .ionic-scheduler-time-grid-groups,
+    .ionic-scheduler-timeline-header,
+    .ionic-scheduler-timeline-tier,
+    .ionic-scheduler-resource-area,
+    .ionic-scheduler-agenda-date-header {
+        position: static !important;
+    }
+
+    /* The controls cannot be clicked on a sheet of paper. */
+    .ionic-scheduler-navigation,
+    .ionic-scheduler-view-selector,
+    .ionic-scheduler-event-resize-handle,
+    .ionic-scheduler-month-more-link,
+    .ionic-scheduler-more-popover,
+    .ionic-scheduler-quick-info,
+    .ionic-scheduler-popover,
+    .ionic-scheduler-context-menu,
+    .ionic-scheduler-selection-toolbar {
+        display: none !important;
+    }
+
+    /* One month per sheet: a printed calendar of several months that runs November over the
+       bottom of October's page is not a calendar of either. The caption stays with its grid. */
+    .ionic-scheduler-view-month[data-month-count]:not([data-month-count='1']) .ionic-scheduler-month + .ionic-scheduler-month {
+        break-before: page;
+    }
+
+    .ionic-scheduler-month-title {
+        break-after: avoid;
+    }
+
+    /* A week, an agenda day or a resource lane split across two pages is unreadable: that is the
+       unit to keep whole. */
+    .ionic-scheduler-month-week,
+    .ionic-scheduler-agenda-group,
+    .ionic-scheduler-resource,
+    .ionic-scheduler-timeline-lane {
+        break-inside: avoid;
+    }
+
+    /* The colour IS the data: without this the browser prints the category fills white and every
+       event becomes the same event. */
+    .ionic-scheduler,
+    .ionic-scheduler * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+/* No motion for anyone who asks for none: the "now" indicator and the hovers need no
+   animation. */
+@media (prefers-reduced-motion: reduce) {
+    .ionic-scheduler * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════════
+   Ionic integration
+
+   Everything below is about the seam between the grid — which is ours — and the chrome, which is
+   made of Ionic components. The rule of thumb is that Ionic paints and we place: a toolbar keeps
+   its own background, a chip its own shape and a popover its own surface, so the iOS 26 and MD3
+   skins reach them, and what is set here is the geometry those components cannot know about.
+   ══════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Header ──────────────────────────────────────────────────────────────────────────────────── */
+
+.ionic-scheduler-header {
+    display: block;
+    border-bottom: 1px solid var(--_isch-border-color);
+}
+
+.ionic-scheduler-header .ionic-scheduler-header-toolbar {
+    --background: var(--_isch-header-background);
+    --padding-start: 0.25rem;
+    --padding-end: 0.25rem;
+    --min-height: auto;
+}
+
+.ionic-scheduler-header-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--_isch-header-gap);
+    inline-size: 100%;
+    padding-block: var(--_isch-header-padding);
+}
+
+/* The title is the bar's visual anchor and the selector is the part that can grow without limit:
+   the selector shrinks, the navigation does not, and the title keeps the middle. */
+.ionic-scheduler-view-selector {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+}
+
+.ionic-scheduler-view-selector ion-segment {
+    justify-content: flex-end;
+}
+
+.ionic-scheduler-navigation ion-buttons {
+    display: flex;
+    align-items: center;
+}
+
+/* "Today" is the one control in the bar that is a destination rather than a step, so it reads as
+   text in the accent colour while the chevrons stay neutral. */
+.ionic-scheduler-navigation .ionic-scheduler-today-button {
+    --color: var(--_isch-accent-color);
+    font-weight: 500;
+}
+
+/* ── Legend ──────────────────────────────────────────────────────────────────────────────────── */
+
+/* The chip carries the theme's shape and fill; the swatch is the only part that has to hold the
+   category's own colour, because that colour is what ties the chip to the events on the grid. */
+.ionic-scheduler-category-legend ion-chip.ionic-scheduler-category-legend-item {
+    margin: 0;
+}
+
+.ionic-scheduler-category-legend-swatch {
+    flex: 0 0 auto;
+    inline-size: 0.625rem;
+    block-size: 0.625rem;
+    border-radius: 50%;
+}
+
+.ionic-scheduler-category-legend-item ion-label {
+    margin-inline: 0.375rem 0.375rem;
+}
+
+.ionic-scheduler-category-legend-item ion-badge.ionic-scheduler-category-legend-count {
+    --background: transparent;
+    --color: var(--_isch-category-legend-count-color);
+    --padding-start: 0;
+    --padding-end: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Selection bar ───────────────────────────────────────────────────────────────────────────── */
+
+.ionic-scheduler-selection-toolbar {
+    display: block;
+}
+
+.ionic-scheduler-selection-toolbar ion-toolbar {
+    --min-height: auto;
+}
+
+.ionic-scheduler-selection-toolbar .ionic-scheduler-selection-count {
+    margin-inline-start: 0.75rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Loading ─────────────────────────────────────────────────────────────────────────────────── */
+
+.ionic-scheduler-loading ion-spinner {
+    color: var(--_isch-accent-color);
+}
+
+/* ── Overlays ────────────────────────────────────────────────────────────────────────────────── */
+
+/* The host is only a mount point: the panel itself is portalled to the top of the document by
+   Ionic, so leaving the host in the flow would open a gap in the header or the footer. */
+.ionic-scheduler-more-popover,
+.ionic-scheduler-quick-info,
+.ionic-scheduler-popover,
+.ionic-scheduler-context-menu {
+    display: contents;
+}
+
+ion-popover.ionic-scheduler-overlay {
+    --width: 18rem;
+    --max-height: 60vh;
+    --backdrop-opacity: 0.08;
+}
+
+ion-popover.ionic-scheduler-more-popover-panel {
+    --width: 20rem;
+}
+
+ion-popover.ionic-scheduler-context-menu-panel {
+    --width: 12rem;
+}
+
+ion-popover.ionic-scheduler-overlay .ionic-scheduler-overlay-content {
+    --padding-start: 0.75rem;
+    --padding-end: 0.75rem;
+    --padding-top: 0.75rem;
+    --padding-bottom: 0.5rem;
+}
+
+ion-popover.ionic-scheduler-overlay .ionic-scheduler-overlay-title {
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+ion-popover.ionic-scheduler-overlay .ionic-scheduler-overlay-time,
+ion-popover.ionic-scheduler-overlay .ionic-scheduler-overlay-location {
+    display: block;
+    font-size: 0.8125rem;
+}
+
+ion-popover.ionic-scheduler-overlay .ionic-scheduler-overlay-description {
+    margin-block: 0.5rem 0;
+    font-size: 0.8125rem;
+}
+
+ion-popover.ionic-scheduler-overlay .ionic-scheduler-overlay-actions {
+    margin-block-start: 0.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.25rem;
+}
+
+ion-popover.ionic-scheduler-more-popover-panel .ionic-scheduler-event-swatch {
+    flex: 0 0 auto;
+    inline-size: 0.625rem;
+    block-size: 0.625rem;
+    margin-inline-end: 0.625rem;
+    border-radius: 50%;
+}
+
+/*
+ * The event popover opens on HOVER, so its backdrop must not take the pointer.
+ *
+ * Ionic's backdrop covers the viewport even with `showBackdrop="false"` — invisible, but still
+ * catching every event — and under a hover-driven panel that means the pointer leaves the event the
+ * instant the panel appears, which closes it, which uncovers the event, which opens it again. This
+ * is the same escape Ionic itself uses for nested popovers: the host stops taking pointer events and
+ * the panel takes them back.
+ */
+ion-popover.ionic-scheduler-event-popover-panel {
+    pointer-events: none;
+}
+
+ion-popover.ionic-scheduler-event-popover-panel .popover-wrapper {
+    pointer-events: auto;
+}
+
+/* ── Print ───────────────────────────────────────────────────────────────────────────────────── */
+
+@media print {
+    /* A popover is a portalled overlay: it is NOT inside the copy the Scheduler prints, so hiding
+       it with the rest of the controls is not enough — it has to be taken out of the document. */
+    ion-popover.ionic-scheduler-overlay {
+        display: none !important;
+    }
+}
